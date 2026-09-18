@@ -1,0 +1,461 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>תגלו באיזו קבוצה אתם</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Assistant:wght@300;400;600;800&display=swap');
+
+        :root {
+            --bg-color: #f7f7f7;
+            --surface-color: #ffffff;
+            --text-main: #222222;
+            --text-muted: #777777;
+            --border-color: #dddddd;
+            --shadow-soft: 0 10px 25px rgba(0, 0, 0, 0.05);
+            --shadow-hover: 0 15px 35px rgba(0, 0, 0, 0.1);
+            --shadow-inner: inset 0 2px 4px rgba(0,0,0,0.02);
+            --transition-smooth: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+            --transition-bounce: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: 'Assistant', sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-main);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            overflow: hidden;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        .app-container {
+            width: 100%;
+            max-width: 450px;
+            padding: 2rem;
+            text-align: center;
+            position: relative;
+        }
+
+        h1 {
+            font-size: 2rem;
+            font-weight: 800;
+            margin-bottom: 2.5rem;
+            color: var(--text-main);
+            letter-spacing: -0.5px;
+        }
+
+        .screen {
+            display: none;
+            flex-direction: column;
+            align-items: center;
+            width: 100%;
+            opacity: 0;
+            transition: opacity 0.4s ease;
+        }
+
+        .screen.active {
+            display: flex;
+            opacity: 1;
+        }
+
+        .input-group {
+            position: relative;
+            width: 100%;
+            margin-bottom: 1rem;
+            z-index: 10;
+        }
+
+        input[type="text"] {
+            width: 100%;
+            padding: 1rem 1.5rem;
+            font-size: 1.1rem;
+            font-family: inherit;
+            border: 2px solid transparent;
+            border-radius: 50px;
+            background-color: var(--surface-color);
+            box-shadow: var(--shadow-soft);
+            color: var(--text-main);
+            outline: none;
+            transition: var(--transition-smooth);
+            text-align: center;
+        }
+
+        input[type="text"]::placeholder {
+            color: #aaaaaa;
+        }
+
+        input[type="text"]:focus {
+            border-color: #cccccc;
+            box-shadow: var(--shadow-hover);
+            transform: scale(1.02);
+        }
+
+        .dropdown {
+            position: absolute;
+            top: calc(100% + 10px);
+            left: 0;
+            right: 0;
+            background-color: var(--surface-color);
+            border-radius: 25px;
+            box-shadow: var(--shadow-hover);
+            max-height: 200px;
+            overflow-y: auto;
+            opacity: 0;
+            visibility: hidden;
+            transform: translateY(-10px);
+            transition: var(--transition-smooth);
+            z-index: 20;
+        }
+
+        .dropdown.show {
+            opacity: 1;
+            visibility: visible;
+            transform: translateY(0);
+        }
+
+        .dropdown-item {
+            padding: 1rem;
+            cursor: pointer;
+            border-bottom: 1px solid var(--border-color);
+            transition: background-color 0.2s ease;
+        }
+
+        .dropdown-item:last-child {
+            border-bottom: none;
+        }
+
+        .dropdown-item:hover, .dropdown-item:active {
+            background-color: #f0f0f0;
+        }
+
+        .error-message {
+            color: var(--text-muted);
+            font-size: 0.9rem;
+            margin-top: 0.5rem;
+            opacity: 0;
+            height: 0;
+            transition: var(--transition-smooth);
+        }
+
+        .error-message.show {
+            opacity: 1;
+            height: 20px;
+        }
+
+        .btn-confirm {
+            margin-top: 1.5rem;
+            padding: 1rem 3rem;
+            font-size: 1.2rem;
+            font-weight: 600;
+            font-family: inherit;
+            color: var(--surface-color);
+            background-color: var(--text-main);
+            border: none;
+            border-radius: 50px;
+            cursor: pointer;
+            box-shadow: 0 8px 20px rgba(0,0,0,0.2);
+            transition: var(--transition-smooth);
+            opacity: 0;
+            visibility: hidden;
+            transform: translateY(10px);
+        }
+
+        .btn-confirm.show {
+            opacity: 1;
+            visibility: visible;
+            transform: translateY(0);
+        }
+
+        .btn-confirm:hover {
+            transform: translateY(-3px) scale(1.02);
+            box-shadow: 0 12px 25px rgba(0,0,0,0.3);
+        }
+
+        .btn-confirm:active {
+            transform: translateY(2px) scale(0.95);
+            box-shadow: 0 4px 10px rgba(0,0,0,0.2);
+        }
+
+        .drum-container {
+            font-size: 6rem;
+            filter: grayscale(100%);
+            display: inline-block;
+        }
+
+        .shaking {
+            animation: drumShake 0.4s infinite cubic-bezier(0.36, 0.07, 0.19, 0.97);
+        }
+
+        @keyframes drumShake {
+            0% { transform: rotate(0) translateY(0); }
+            25% { transform: rotate(-10deg) translateY(-5px); }
+            50% { transform: rotate(0) translateY(0); }
+            75% { transform: rotate(10deg) translateY(-5px); }
+            100% { transform: rotate(0) translateY(0); }
+        }
+
+        .result-content {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .result-title {
+            font-size: 1.8rem;
+            font-weight: 600;
+            margin-bottom: 1rem;
+        }
+
+        .result-emoji {
+            font-size: 7rem;
+            filter: grayscale(100%);
+            transform: scale(0);
+            opacity: 0;
+        }
+
+        .pop-in {
+            animation: popIn 0.8s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+        }
+
+        @keyframes popIn {
+            0% { transform: scale(0); opacity: 0; }
+            50% { transform: scale(1.1); opacity: 1; }
+            100% { transform: scale(1); opacity: 1; }
+        }
+
+        .btn-restart {
+            margin-top: 3rem;
+            background: transparent;
+            color: var(--text-muted);
+            border: 1px solid var(--border-color);
+            padding: 0.5rem 1.5rem;
+            border-radius: 50px;
+            cursor: pointer;
+            transition: var(--transition-smooth);
+            font-family: inherit;
+        }
+
+        .btn-restart:hover {
+            background: #eee;
+            color: var(--text-main);
+        }
+        
+        .btn-restart:active {
+            transform: scale(0.95);
+        }
+
+    </style>
+    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+</head>
+<body>
+
+    <div class="app-container">
+        <h1>נחש מי שכבג | עומר הכוכב</h1>
+
+        <!-- Phase 1: Search -->
+        <div id="screen-search" class="screen active">
+            <div class="input-group">
+                <input type="text" id="name-input" placeholder="הכנס את השם שלך..." autocomplete="off">
+                <div id="dropdown-list" class="dropdown"></div>
+            </div>
+            <div id="error-msg" class="error-message">שם לא נמצא</div>
+            <button id="btn-confirm" class="btn-confirm">אישור</button>
+        </div>
+
+        <!-- Phase 2: Drum Roll -->
+        <div id="screen-drum" class="screen">
+            <div id="drum-emoji" class="drum-container">🥁</div>
+        </div>
+
+        <!-- Phase 3: Result -->
+        <div id="screen-result" class="screen">
+            <div class="result-content">
+                <div class="result-title">החיה שלך היא:</div>
+                <div id="result-animal" class="result-emoji"></div>
+                <button id="btn-restart" class="btn-restart">התחל מחדש</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Raw Data mapping
+        const rawData = [
+            { "animal": "פרה", "emoji": "🐄", "names": ["תאי אביטן", "עידו רוט", "עידו קורן", "ליהי נחמיה", "עדן סנסל", "מיכל תעיזי", "גל ניצני", "יערה גודזינסקי"] },
+            { "animal": "כלב", "emoji": "🐶", "names": ["ענבר אשכנזי", "שי קורקידי", "עלמה סרוסי", "יהב מלול", "איתי גור", "ענבר זעפרני", "שי קירפטריק"] },
+            { "animal": "חתול", "emoji": "🐱", "names": ["יואב חוזה", "זיו פרומוביץ", "מתן יריב", "עידו אורגד", "עמית כהן", "אגם בן יעקב", "דור זרחי"] },
+            { "animal": "סוס", "emoji": "🐴", "names": ["אמילי ועקנין", "אגם מוזס", "איתי סולימה", "דורון וייל", "גילי שושן", "ארבל אלמוג", "אלון בן דהן"] },
+            { "animal": "דולפין", "emoji": "🐬", "names": ["יהונתן יום טוב", "יאיר פואה", "שירה אלקיים", "שי לי אסולין", "נועם רימון", "נועם קריחלי", "שחר חזקאל"] },
+            { "animal": "כבשה", "emoji": "🐑", "names": ["קרני אבלסון", "שחר פייסט", "נועם גודזינסקי", "שלומי יאגודייב", "דניאל רחמים", "יונתן עבאדי", "גיא איווניר"] },
+            { "animal": "חזיר", "emoji": "🐷", "names": ["מעיין רוזן", "אור טמיר", "אורי לב", "עידן כפרי", "אלעד הימל", "יהלי שרייבר", "תהל פפיאר"] },
+            { "animal": "אריה", "emoji": "🦁", "names": ["אלעד ניניו", "אור ישראל", "הראל אוצטרו", "רואי לנג", "נוי גבאי", "נדב עייני", "אסיף גלעד"] },
+            { "animal": "תרנגול", "emoji": "🐓", "names": ["אמיר ללקין", "זהר קרטלה", "עדי שוורץ", "יובל אלה", "רז כהן", "הדס רסקין", "איתן יום טוב", "יואב הראל"] },
+            { "animal": "ברווז", "emoji": "🦆", "names": ["מיקה סטריקובסקי", "יואב מכלוף", "לירי גב", "עדי עטייה", "גיא גיא", "אופיר קיוויתי"] }
+        ];
+
+        // Flatten data for easier searching
+        const peopleList = [];
+        rawData.forEach(group => {
+            group.names.forEach(name => {
+                peopleList.push({
+                    name: name,
+                    animal: group.animal,
+                    emoji: group.emoji
+                });
+            });
+        });
+
+        // DOM Elements
+        const inputField = document.getElementById('name-input');
+        const dropdownList = document.getElementById('dropdown-list');
+        const errorMsg = document.getElementById('error-msg');
+        const btnConfirm = document.getElementById('btn-confirm');
+        
+        const screenSearch = document.getElementById('screen-search');
+        const screenDrum = document.getElementById('screen-drum');
+        const screenResult = document.getElementById('screen-result');
+        
+        const drumEmoji = document.getElementById('drum-emoji');
+        const resultAnimal = document.getElementById('result-animal');
+        const btnRestart = document.getElementById('btn-restart');
+
+        const drumSound = new Audio('https://actions.google.com/sounds/v1/foley/drum_roll.ogg');
+        const successSound = new Audio('https://actions.google.com/sounds/v1/cartoon/cartoon_success_fanfare.ogg');
+
+        let selectedPerson = null;
+
+        inputField.addEventListener('input', (e) => {
+            const query = e.target.value.trim();
+            
+            // Reset selection and UI states on typing
+            selectedPerson = null;
+            btnConfirm.classList.remove('show');
+            errorMsg.classList.remove('show');
+            dropdownList.innerHTML = '';
+
+            if (query.length === 0) {
+                dropdownList.classList.remove('show');
+                return;
+            }
+
+            // Filter names
+            const matches = peopleList.filter(person => person.name.includes(query));
+
+            if (matches.length > 0) {
+                dropdownList.classList.add('show');
+                
+                // Populate dropdown
+                matches.forEach(person => {
+                    const item = document.createElement('div');
+                    item.className = 'dropdown-item';
+                    
+                    // Highlight matching text (optional but good for UX, sticking to simple text here)
+                    item.textContent = person.name;
+                    
+                    item.addEventListener('click', () => {
+                        selectName(person);
+                    });
+                    dropdownList.appendChild(item);
+                });
+
+                // Check for exact match without clicking
+                const exactMatch = matches.find(p => p.name === query);
+                if (exactMatch && matches.length === 1) {
+                    selectName(exactMatch);
+                }
+
+            } else {
+                dropdownList.classList.remove('show');
+                errorMsg.classList.add('show');
+            }
+        });
+
+        function selectName(person) {
+            selectedPerson = person;
+            inputField.value = person.name;
+            dropdownList.classList.remove('show');
+            errorMsg.classList.remove('show');
+            btnConfirm.classList.add('show');
+        }
+
+        // Close dropdown when clicking outside
+        document.addEventListener('click', (e) => {
+            if (!inputField.contains(e.target) && !dropdownList.contains(e.target)) {
+                dropdownList.classList.remove('show');
+            }
+        });
+
+        function switchScreen(fromScreen, toScreen) {
+            fromScreen.classList.remove('active');
+            setTimeout(() => {
+                toScreen.classList.add('active');
+            }, 400); // Wait for fade out
+        }
+
+        btnConfirm.addEventListener('click', () => {
+            if (!selectedPerson) return;
+
+            // Go to Drum Roll phase
+            switchScreen(screenSearch, screenDrum);
+            
+            setTimeout(() => {
+                drumEmoji.classList.add('shaking');
+                drumSound.currentTime = 0;
+                drumSound.play().catch(e => console.log("Audio play prevented by browser"));
+            }, 400);
+
+            // Wait 3 seconds, then reveal result
+            setTimeout(() => {
+                drumEmoji.classList.remove('shaking');
+                drumSound.pause();
+                showResult();
+            }, 3400); // 400ms transition + 3000ms drumroll
+        });
+
+        function showResult() {
+            // Prepare result screen
+            resultAnimal.textContent = selectedPerson.emoji;
+            resultAnimal.classList.remove('pop-in');
+            
+            // Switch screen
+            switchScreen(screenDrum, screenResult);
+
+            setTimeout(() => {
+                resultAnimal.classList.add('pop-in');
+                
+                // Play success sound
+                successSound.currentTime = 0;
+                successSound.play().catch(e => console.log("Audio play prevented by browser"));
+
+                // Fire strictly grayscale confetti
+                confetti({
+                    particleCount: 150,
+                    spread: 80,
+                    origin: { y: 0.6 },
+                    colors: ['#000000', '#ffffff', '#888888', '#cccccc', '#333333']
+                });
+            }, 400);
+        }
+
+        // Restart functionality
+        btnRestart.addEventListener('click', () => {
+            selectedPerson = null;
+            inputField.value = '';
+            btnConfirm.classList.remove('show');
+            resultAnimal.classList.remove('pop-in');
+            switchScreen(screenResult, screenSearch);
+        });
+
+    </script>
+</body>
+</html>
